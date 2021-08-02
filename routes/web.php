@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ReservoirController;
+use App\Http\Controllers\MemberController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,12 +24,23 @@ Auth::routes();
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 
-Route::group(['prefix' => 'authors'], function(){
-Route::get('', [AuthorController::class, 'index'])->name('author.index');
-Route::get('create', [AuthorController::class, 'create'])->name('author.create'); 
-Route::post('store', [AuthorController::class, 'store'])->name('author.store'); 
-Route::get('edit/{author}', [AuthorController::class, 'edit'])->name('author.edit'); 
-Route::post('update/{author}', [AuthorController::class, 'update'])->name('author.update'); 
-Route::post('delete/{author}', [AuthorController::class, 'destroy'])->name('author.destroy'); 
-Route::get('show/{author}', [AuthorController::class, 'show'])->name('author.show');
+Route::group(['prefix' => 'reservoirs'], function(){
+Route::get('', [ReservoirController::class, 'index'])->name('reservoir.index');
+Route::get('create', [ReservoirController::class, 'create'])->name('reservoir.create'); 
+Route::post('store', [ReservoirController::class, 'store'])->name('reservoir.store'); 
+Route::get('edit/{reservoir}', [ReservoirController::class, 'edit'])->name('reservoir.edit'); 
+Route::post('update/{reservoir}', [ReservoirController::class, 'update'])->name('reservoir.update'); 
+Route::post('delete/{reservoir}', [ReservoirController::class, 'destroy'])->name('reservoir.destroy'); 
+Route::get('show/{reservoir}', [ReservoirController::class, 'show'])->name('reservoir.show');
+});
+
+
+Route::group(['prefix' => 'members'], function(){
+Route::get('', [MemberController::class, 'index'])->name('member.index'); 
+Route::get('create', [MemberController::class, 'create'])->name('member.create'); 
+Route::post('store', [MemberController::class, 'store'])->name('member.store'); 
+Route::get('edit/{member}', [MemberController::class, 'edit'])->name('member.edit'); 
+Route::post('update/{member}', [MemberController::class, 'update'])->name('member.update'); 
+Route::post('delete/{member}', [MemberController::class, 'destroy'])->name('member.destroy'); 
+Route::get('show/{member}', [MemberController::class, 'show'])->name('member.show');
 });

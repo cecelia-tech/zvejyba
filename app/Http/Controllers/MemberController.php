@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Member;
 use Illuminate\Http\Request;
+use App\Models\Reservoir;
 
 class MemberController extends Controller
 {
@@ -14,7 +15,8 @@ class MemberController extends Controller
      */
     public function index()
     {
-        //
+        $members = Member::all();
+        return view('member.index', ['members' => $members]);
     }
 
     /**
@@ -24,7 +26,8 @@ class MemberController extends Controller
      */
     public function create()
     {
-        //
+        $reservoirs = Reservoir::all();
+        return view('member.create', ['reservoirs' => $reservoirs]);
     }
 
     /**
@@ -35,7 +38,15 @@ class MemberController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $member = new Member;
+        $member->name = $request->member_name; 
+        $member->surname = $request->member_surname; 
+        $member->live = $request->member_live; 
+        $member->experience = $request->member_experience; 
+        $member->registered = $request->member_registered; 
+        $member->reservoir_id = $request->reservoir_id; 
+        $member->save();
+        return redirect()->route('member.index');
     }
 
     /**
@@ -57,7 +68,8 @@ class MemberController extends Controller
      */
     public function edit(Member $member)
     {
-        //
+        $reservoirs = Reservoir::all();
+        return view('member.edit', ['member' => $member, 'reservoirs' => $reservoirs]);
     }
 
     /**
@@ -69,7 +81,14 @@ class MemberController extends Controller
      */
     public function update(Request $request, Member $member)
     {
-        //
+        $member->name = $request->member_name; 
+        $member->surname = $request->member_surname; 
+        $member->live = $request->member_live; 
+        $member->experience = $request->member_experience; 
+        $member->registered = $request->member_registered; 
+        $member->reservoir_id = $request->reservoir_id; 
+        $member->save();
+        return redirect()->route('member.index');
     }
 
     /**
@@ -80,6 +99,7 @@ class MemberController extends Controller
      */
     public function destroy(Member $member)
     {
-        //
+        $member->delete();
+        return redirect()->route('member.index');
     }
 }
