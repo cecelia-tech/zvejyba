@@ -43,4 +43,5 @@ Route::get('edit/{member}', [MemberController::class, 'edit'])->name('member.edi
 Route::post('update/{member}', [MemberController::class, 'update'])->name('member.update'); 
 Route::post('delete/{member}', [MemberController::class, 'destroy'])->name('member.destroy'); 
 Route::get('show/{member}', [MemberController::class, 'show'])->name('member.show');
+Route::get('pdf/{member}', [MemberController::class, 'pdf'])->name('member.pdf');
 });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Reservoir;
 use Illuminate\Http\Request;
+use Validator;
 
 class ReservoirController extends Controller
 {
@@ -12,9 +13,15 @@ class ReservoirController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+    
     public function index()
     {
-        $reservoirs = Reservoir::all();
+        $reservoirs = Reservoir::orderBy('area', 'desc')->get();
         return view('reservoir.index', ['reservoirs' => $reservoirs]);
     }
 
@@ -25,6 +32,7 @@ class ReservoirController extends Controller
      */
     public function create()
     {
+        // $reservoir
         return view('reservoir.create');
     }
 
@@ -36,10 +44,24 @@ class ReservoirController extends Controller
      */
     public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'reservoir_title' => ['required', 'alpha', 'min:3', 'max:200'],
+            'reservoir_area' => ['required', 'numeric'], 
+            'reservoir_about' => ['required'], 
+            ]
+        );
+
+            if ($validator->fails()) {
+            $request->flash();
+            return redirect()->back()->withErrors($validator); 
+        }
+
         $reservoir = new Reservoir;
-        $reservoir->title = $request->reservoir_title; $reservoir->area = $request->reservoir_area; 
-        $reservoir->about = $request->reservoir_about;$reservoir->save();
-        return redirect()->route('reservoir.index');
+        $reservoir->title = $request->reservoir_title; 
+        $reservoir->area = $request->reservoir_area; 
+        $reservoir->about = $request->reservoir_about;
+        $reservoir->save();
+        return redirect()->route('reservoir.index')->with('success_message', 'Reservoir successfuly created.');
     }
 
     /**
@@ -73,9 +95,22 @@ class ReservoirController extends Controller
      */
     public function update(Request $request, Reservoir $reservoir)
     {
-        $reservoir->title = $request->reservoir_title; $reservoir->area = $request->reservoir_area; 
-        $reservoir->about = $request->reservoir_about;$reservoir->save();
-        return redirect()->route('reservoir.index');
+        $validator = Validator::make($request->all(), [
+            'reservoir_title' => ['required', 'alpha', 'min:3', 'max:200'],
+            'reservoir_area' => ['required', 'numeric'], 
+            'reservoir_about' => ['required'], 
+            ]
+        );
+            if ($validator->fails()) {
+            $request->flash();
+            return redirect()->back()->withErrors($validator); 
+        }
+
+        $reservoir->title = $request->reservoir_title; 
+        $reservoir->area = $request->reservoir_area; 
+        $reservoir->about = $request->reservoir_about;
+        $reservoir->save();
+        return redirect()->route('reservoir.index')->with('success_message', 'Reservoir successfuly update.');
     }
 
     /**
@@ -87,8 +122,9 @@ class ReservoirController extends Controller
     public function destroy(Reservoir $reservoir)
     {
         if($reservoir->reservoirLicences->count()){
-        return 'Licences can\'t be taken away, because it is still allowed to fish in this reservoir'; }
+            return redirect()->route('reservoir.index')->with('info_message', 'Licences can\'t be taken away, because it is still allowed to fish in this reservoir.');
+        }
         $author->delete();
-        return redirect()->route('reservoir.index');
+        return redirect()->route('reservoir.index')->with('success_message', 'Reservoir successfuly deleted.');
     }
 }

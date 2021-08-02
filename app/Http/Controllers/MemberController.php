@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Member;
 use Illuminate\Http\Request;
 use App\Models\Reservoir;
+use Validator;
+use PDF;
 
 class MemberController extends Controller
 {
@@ -13,10 +15,27 @@ class MemberController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function __construct()
     {
-        $members = Member::all();
-        return view('member.index', ['members' => $members]);
+        $this->middleware('auth');
+    }
+    
+    public function index(Request $request)
+    {
+        $defaultReservoir = 0;
+        $members = Member::orderBy('surname')->get();
+        // $members = Better::orderBy('type')->paginate(15)->withQueryString();
+        $reservoirs = Reservoir::orderBy('area', 'desc')->get();
+
+        if ($request->reservoir_id) {
+            $members= Member::where('reservoir_id', (int)$request->reservoir_id)->get();
+            $defaultReservoir = (int)$request->reservoir_id;
+        } 
+        
+        return view('member.index', ['members' => $members,
+        'defaultReservoir' => $defaultReservoir,
+        'reservoirs' => $reservoirs,
+    ]);
     }
 
     /**
@@ -26,7 +45,7 @@ class MemberController extends Controller
      */
     public function create()
     {
-        $reservoirs = Reservoir::all();
+        $reservoirs = Reservoir::orderBy('title')->get();
         return view('member.create', ['reservoirs' => $reservoirs]);
     }
 
@@ -38,6 +57,24 @@ class MemberController extends Controller
      */
     public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'member_name' => ['required', 'alpha', 'min:3', 'max:100'],
+            'member_surname' => ['required', 'alpha', 'min:3', 'max:150'],
+            'member_live' => ['required', 'alpha', 'min:3', 'max:150'],
+            'member_experience' => ['required', 'numeric', 'min:1'],
+            'member_registered' => ['required', 'numeric'],
+            'reservoir_id' => ['required', 'integer', 'min:1'],
+            ]
+        );
+            if ($validator->fails()) {
+            $request->flash();
+            return redirect()->back()->withErrors($validator); 
+        }
+        if ($request->member_experience < $request->member_registered){
+            $request->flash();
+            return redirect()->back()->with('info_message', 'Member\'s experience can\'t be greater than registration time');
+        }
+
         $member = new Member;
         $member->name = $request->member_name; 
         $member->surname = $request->member_surname; 
@@ -46,7 +83,7 @@ class MemberController extends Controller
         $member->registered = $request->member_registered; 
         $member->reservoir_id = $request->reservoir_id; 
         $member->save();
-        return redirect()->route('member.index');
+        return redirect()->route('member.index')->with('success_message', 'Member successfuly created.');
     }
 
     /**
@@ -57,7 +94,8 @@ class MemberController extends Controller
      */
     public function show(Member $member)
     {
-        //
+        $reservoirs = Reservoir::all();
+        return view('member.show', ['member'=>$member, 'reservoirs'=>$reservoirs]);
     }
 
     /**
@@ -68,7 +106,7 @@ class MemberController extends Controller
      */
     public function edit(Member $member)
     {
-        $reservoirs = Reservoir::all();
+        $reservoirs = Reservoir::orderBy('title')->get();
         return view('member.edit', ['member' => $member, 'reservoirs' => $reservoirs]);
     }
 
@@ -81,6 +119,20 @@ class MemberController extends Controller
      */
     public function update(Request $request, Member $member)
     {
+        $validator = Validator::make($request->all(), [
+            'member_name' => ['required', 'alpha', 'min:3', 'max:100'],
+            'member_surname' => ['required', 'alpha', 'min:3', 'max:150'],
+            'member_live' => ['required', 'alpha', 'min:3', 'max:150'],
+            'member_experience' => ['required', 'numeric', 'min:1'],
+            'member_registered' => ['required', 'numeric'],
+            'reservoir_id' => ['required', 'integer', 'min:1'],
+            ]
+        );
+            if ($validator->fails()) {
+            $request->flash();
+            return redirect()->back()->withErrors($validator); 
+        }
+
         $member->name = $request->member_name; 
         $member->surname = $request->member_surname; 
         $member->live = $request->member_live; 
@@ -88,7 +140,7 @@ class MemberController extends Controller
         $member->registered = $request->member_registered; 
         $member->reservoir_id = $request->reservoir_id; 
         $member->save();
-        return redirect()->route('member.index');
+        return redirect()->route('member.index')->with('success_message', 'Member successfuly updated.');
     }
 
     /**
@@ -100,6 +152,12 @@ class MemberController extends Controller
     public function destroy(Member $member)
     {
         $member->delete();
-        return redirect()->route('member.index');
+        return redirect()->route('member.index')->with('success_message', 'Member successfuly deleted.');
+    }
+
+    public function pdf(Member $member)
+    {
+        $pdf = PDF::loadView('member.pdf', ['member'=> $member]);
+        return $pdf->download($member->name. $member->surname.'.pdf');
     }
 }
